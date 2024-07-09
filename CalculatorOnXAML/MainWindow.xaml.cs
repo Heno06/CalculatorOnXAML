@@ -50,6 +50,10 @@ namespace CalculatorOnXAML
             ButtonEquals.IsEnabled = false;
             ButtonDot.IsEnabled = false;
         }
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
         private string option { get; set; }
         private double num1 { get; set; }
         private double num2 { get; set; }

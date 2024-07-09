@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace CalculatorOnXAML
 {
@@ -19,6 +9,7 @@ namespace CalculatorOnXAML
     /// </summary>
     public partial class second_calculator_XAML : Window
     {
+        
         private void EnableAllButtons()
         {
             button0.IsEnabled = true;
@@ -64,11 +55,14 @@ namespace CalculatorOnXAML
             buttonDot.IsEnabled = false;
         }
         private string second_option { get; set; }
-        private string second_expression { get; set; } 
+        private string second_expression { get; set; }
         private double second_num1 { get; set; }
         private double second_num2 { get; set; }
         private double second_result { get; set; }
 
+        private bool equalsClicked = false;
+
+        private bool isNewNumber = true;
         public second_calculator_XAML()
         {
             InitializeComponent();
@@ -77,61 +71,168 @@ namespace CalculatorOnXAML
         private void Second_Button_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
-            second_expression += button.Content.ToString(); 
-            txtTotal1.Text += button.Content.ToString();
+            if (equalsClicked == true)
+            {
+                txtTotal1.Text = second_result.ToString(); // Use the previous result as the first number
+                equalsClicked = false;
+            }
+            if (button.Content.ToString() == "+" || button.Content.ToString() == "-" || button.Content.ToString() == "*" || button.Content.ToString() == "/" || button.Content.ToString() == "^" || button.Content.ToString() == "%")
+            {
+                if (txtTotal1.Text.Contains("+") || txtTotal1.Text.Contains("-") || txtTotal1.Text.Contains("*") || txtTotal1.Text.Contains("/") || txtTotal1.Text.Contains("^") || txtTotal1.Text.Contains("%"))
+                {
+                    // Do nothing
+                }
+                else
+                {
+                    txtTotal1.Text += button.Content.ToString();
+                    second_expression += button.Content.ToString();
+                }
+            }
+            else
+            {
+                if (txtTotal1.Text == "0")
+                {
+                    txtTotal1.Text = button.Content.ToString();
+                }
+                else
+                {
+                    txtTotal1.Text += button.Content.ToString();
+                }
+                second_expression += button.Content.ToString();
+            }
         }
 
         private void Second_Operation_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
-            if (!string.IsNullOrEmpty(txtTotal1.Text))
+            if (equalsClicked)
+            {
+                txtTotal1.Text = second_result.ToString();
+                second_expression = second_result.ToString();
+                equalsClicked = false;
+            }
+            if (!string.IsNullOrEmpty(txtTotal1.Text) && !txtTotal1.Text.Contains("+") && !txtTotal1.Text.Contains("-") && !txtTotal1.Text.Contains("*") && !txtTotal1.Text.Contains("/") && !txtTotal1.Text.Contains("^") && !txtTotal1.Text.Contains("%"))
             {
                 second_num1 = double.Parse(txtTotal1.Text);
-                second_expression += txtTotal1.Text; 
-                txtTotal1.Clear();
+                second_expression = txtTotal1.Text;
             }
             second_option = button.Content.ToString();
-            second_expression += second_option; 
-            txtTotal1.Text += second_option;
+            if (txtTotal1.Text.Contains("+") || txtTotal1.Text.Contains("-") || txtTotal1.Text.Contains("*") || txtTotal1.Text.Contains("/") || txtTotal1.Text.Contains("^") || txtTotal1.Text.Contains("%"))
+            {
+                string oldSymbol = "";
+                if (txtTotal1.Text.Contains("+"))
+                {
+                    oldSymbol = "+";
+                }
+                else if (txtTotal1.Text.Contains("-"))
+                {
+                    oldSymbol = "-";
+                }
+                else if (txtTotal1.Text.Contains("*"))
+                {
+                    oldSymbol = "*";
+                }
+                else if (txtTotal1.Text.Contains("/"))
+                {
+                    oldSymbol = "/";
+                }
+                else if (txtTotal1.Text.Contains("^"))
+                {
+                    oldSymbol = "^";
+                }
+                else if (txtTotal1.Text.Contains("%"))
+                {
+                    oldSymbol = "%";
+                }
+
+                // Check if the textbox contains 'E' for scientific notation
+                if (txtTotal1.Text.Contains("E"))
+                {
+                    txtTotal1.Text += " " + second_option + " ";
+                    second_expression += " " + second_option + " ";
+                }
+                else
+                {
+                    txtTotal1.Text = txtTotal1.Text.Replace(oldSymbol, second_option);
+                }
+            }
+            else
+            {
+                txtTotal1.Text += " " + second_option + " ";
+                second_expression += " " + second_option + " ";
+            }
+
         }
 
         private void Second_ButtonEquals_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtTotal1.Text))
+            if (string.IsNullOrEmpty(txtTotal1.Text) || second_expression == "")
             {
                 txtTotal1.Text = "Invalid Format";
                 DisableAllButtons();
                 return;
             }
 
-            second_num2 = double.Parse(txtTotal1.Text);
-            second_expression += txtTotal1.Text;
+            if (!txtTotal1.Text.Contains("+") && !txtTotal1.Text.Contains("-") && !txtTotal1.Text.Contains("*") && !txtTotal1.Text.Contains("/") && !txtTotal1.Text.Contains("^") && !txtTotal1.Text.Contains("%"))
+            {
+                txtTotal1.Text = "Invalid Format";
+                DisableAllButtons();
+                return;
+            }
+
+            if (txtTotal1.Text.EndsWith("+") || txtTotal1.Text.EndsWith("-") || txtTotal1.Text.EndsWith("*") || txtTotal1.Text.EndsWith("/") || txtTotal1.Text.EndsWith("^") || txtTotal1.Text.EndsWith("%"))
+            {
+                txtTotal1.Text = "Invalid Format";
+                DisableAllButtons();
+                return;
+            }
+
+            string[] parts = txtTotal1.Text.Split(new char[] { '+', '-', '*', '/', '^', '%' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                txtTotal1.Text = "Invalid Format";
+                DisableAllButtons();
+                return;
+            }
+
+            if (!double.TryParse(parts[0], out double num1) || !double.TryParse(parts[1], out double num2))
+            {
+                txtTotal1.Text = "Invalid Format";
+                DisableAllButtons();
+                return;
+            }
 
             switch (second_option)
             {
                 case "+":
-                    second_result = second_num1 + second_num2;
+                    second_result = num1 + num2;
                     break;
                 case "-":
-                    second_result = second_num1 - second_num2;
+                    second_result = num1 - num2;
                     break;
                 case "*":
-                    second_result = second_num1 * second_num2;
+                    second_result = num1 * num2;
                     break;
                 case "^":
-                    second_result = Math.Pow(second_num1, second_num2);
+                    second_result = Math.Pow(num1, num2);
                     break;
                 case "/":
-                    if (second_num2 == 0)
+                    if (num2 == 0)
                     {
                         txtTotal1.Text = "Cannot Divide By 0";
                         DisableAllButtons();
                         return;
                     }
-                    second_result = second_num1 / second_num2;
+                    second_result = num1 / num2;
                     break;
                 case "%":
-                    second_result = second_num1 % second_num2;
+                    if (num2 == 0)
+                    {
+                        txtTotal1.Text = "Cannot Modulo By 0";
+                        DisableAllButtons();
+                        return;
+                    }
+                    second_result = num1 % num2;
                     break;
                 default:
                     txtTotal1.Text = "Invalid Operation";
@@ -140,14 +241,19 @@ namespace CalculatorOnXAML
             }
 
             txtTotal1.Text = second_result.ToString();
-            second_expression += " = " + second_result.ToString(); 
+            second_expression += " = " + second_result.ToString();
+            equalsClicked = true;
+            isNewNumber = true;
         }
+
+
+
 
         private void Second_ButtonClear_Click(object sender, RoutedEventArgs e)
         {
             EnableAllButtons();
             txtTotal1.Clear();
-            second_expression = ""; 
+            second_expression = "";
             second_result = 0;
             second_num1 = 0;
             second_num2 = 0;
@@ -155,6 +261,13 @@ namespace CalculatorOnXAML
 
         private void Second_ButtonSqrt_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(txtTotal1.Text) || !double.TryParse(txtTotal1.Text, out _))
+            {
+                txtTotal1.Text = "Invalid format";
+                DisableAllButtons();
+                return;
+            }
+            EnableAllButtons();
             second_num1 = double.Parse(txtTotal1.Text);
             if (second_num1 < 0)
             {
@@ -163,31 +276,56 @@ namespace CalculatorOnXAML
             }
             second_result = Math.Sqrt(second_num1);
             txtTotal1.Text = second_result.ToString();
-            second_expression = $"sqrt({second_num1}) = {second_result}"; 
+            second_expression = $"sqrt({second_num1}) = {second_result}";
         }
 
         private void Second_ButtonPercent_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(txtTotal1.Text) || !double.TryParse(txtTotal1.Text, out _))
+            {
+                txtTotal1.Text = "Invalid format";
+                DisableAllButtons();
+                return;
+            }
+            EnableAllButtons();
             second_num1 = double.Parse(txtTotal1.Text);
             second_result = second_num1 / 100;
             txtTotal1.Text = second_result.ToString();
-            second_expression = $"{second_num1} % = {second_result}"; 
+            second_expression = $"{second_num1} % = {second_result}";
         }
 
         private void Second_ButtonDot_Click(object sender, RoutedEventArgs e)
         {
-            if (!txtTotal1.Text.Contains("."))
+            if (!string.IsNullOrEmpty(txtTotal1.Text) && !txtTotal1.Text.EndsWith("."))
             {
-                txtTotal1.Text += ".";
-                second_expression += ".";
+                if (!txtTotal1.Text.Contains("."))
+                {
+                    txtTotal1.Text += ".";
+                    second_expression += ".";
+                }
+                else
+                {
+                    char[] operators = { '+', '-', '*', '/' };
+                    foreach (char op in operators)
+                    {
+                        int opIndex = txtTotal1.Text.LastIndexOf(op);
+                        if (opIndex != -1 && !txtTotal1.Text.Substring(opIndex + 1).Contains("."))
+                        {
+                            txtTotal1.Text += ".";
+                            second_expression += ".";
+                            break;
+                        }
+                    }
+                }
             }
         }
 
         private void FirstCalc_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow mainWindow = new MainWindow();
-            mainWindow.Show();
+            MainWindow secondCalculatorWindow = new MainWindow();
+            secondCalculatorWindow.Show();
             this.Close();
+
         }
 
     }
